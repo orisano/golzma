@@ -1,6 +1,6 @@
 # golzma
 
-Pure Go LZMA/LZMA2/7z decoder with assembly acceleration on ARM64 and AMD64.
+Pure Go LZMA/LZMA2 decoder with assembly acceleration on ARM64 and AMD64.
 
 ## Install
 
@@ -24,18 +24,6 @@ r, err := golzma.NewReader(compressedReader)
 ```go
 r := golzma.NewLZMA2Reader(compressedReader, dictProp)
 // read decompressed data from r
-```
-
-### 7z
-
-```go
-import "github.com/orisano/golzma/sevenz"
-
-a, err := sevenz.Open("archive.7z")
-for _, e := range a.Entries {
-    rc, err := a.OpenEntry(e)
-    // read from rc
-}
 ```
 
 ## Benchmark
