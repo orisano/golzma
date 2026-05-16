@@ -451,28 +451,30 @@ func (d *decoder) decodeLoop(limit int) error {
 					distance = (distance << numDirectBits) | direct
 					distance <<= numAlignBits
 
+					// Reverse-bit tree decode of the 4 align bits. The
+					// index update pattern (i += m / i += 2m) mirrors the
+					// C SDK's REV_BIT_CONST macro so the prob table layout
+					// matches the amd64 asm path; otherwise an asm→pure-Go
+					// fallback mid-stream reads stale prob values.
 					pAlign := probs[probAlign:]
 					ai := uint32(1)
-					b0 := decodeBit(&pAlign[ai])
-					if b0 == 0 {
-						ai <<= 1
+					if decodeBit(&pAlign[ai]) == 0 {
+						ai += 1
 					} else {
 						distance |= 1
-						ai = (ai << 1) | 1
+						ai += 2
 					}
-					b1 := decodeBit(&pAlign[ai])
-					if b1 == 0 {
-						ai <<= 1
+					if decodeBit(&pAlign[ai]) == 0 {
+						ai += 2
 					} else {
 						distance |= 2
-						ai = (ai << 1) | 1
+						ai += 4
 					}
-					b2 := decodeBit(&pAlign[ai])
-					if b2 == 0 {
-						ai <<= 1
+					if decodeBit(&pAlign[ai]) == 0 {
+						ai += 4
 					} else {
 						distance |= 4
-						ai = (ai << 1) | 1
+						ai += 8
 					}
 					if decodeBit(&pAlign[ai]) != 0 {
 						distance |= 8

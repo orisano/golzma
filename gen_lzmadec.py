@@ -444,11 +444,15 @@ def LITM_2():
 # ---------- REVERSE BITS ----------
 
 def ALIGN_BIT(bit_index, label):
-    """Decode one alignment bit using standard binary tree traversal.
+    """Decode one alignment bit using the C SDK's REV_BIT_CONST tree layout.
 
-    Uses sym2 (R9) as byte offset (ai*2) into the alignment prob table (probs/R11).
-    Accumulates the decoded bit into sym (R3) via OR.
+    Uses sym2 (R9) as byte offset (i*PMULT) into the alignment prob table
+    (probs/R11). After decoding, sym2 advances by m*PMULT (bit=0) or
+    2*m*PMULT (bit=1), where m = 1 << bit_index, mirroring the linear-index
+    pattern of LzmaDec.c so the asm and pure-Go fallback agree on the
+    layout. Accumulates the decoded bit into sym (R3) via OR.
     """
+    m = 1 << bit_index
     NORM()
     MOVHU(probs + sym2, prob_reg)
     LSRW(kNumBitModelTotalBits, range_, t0)
@@ -460,10 +464,10 @@ def ALIGN_BIT(bit_index, label):
     CSELW(HS, prob_reg, t2, t2)
     PUP_BASE_2(prob_reg, t2)
     MOVH(t2, probs + sym2)
-    # ai = ai * 2 + (bit ? 1 : 0)  =>  byte offset = offset * 2 + (bit ? 2 : 0)
-    LSLW(1, sym2, sym2)
-    MOVW(PMULT, t2)
-    CSELW(HS, t2, ZR, t2)
+    # sym2 += m*PMULT (bit=0) or 2*m*PMULT (bit=1)
+    MOVW(m * PMULT, t2)
+    MOVW(2 * m * PMULT, t3)
+    CSELW(HS, t3, t2, t2)
     ADDW(t2, sym2, sym2)
     # distance |= (1 << bit_index) if bit == 1
     ORRW(1 << bit_index, sym, t2)
