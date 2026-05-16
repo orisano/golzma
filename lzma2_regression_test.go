@@ -35,7 +35,10 @@ func TestLZMA2_7zStreams_AsmBug(t *testing.T) {
 			}
 
 			// Pure-Go reference decode.
-			refR := NewLZMA2Reader(bytes.NewReader(packed), tc.dictProp)
+			refR, err := NewLZMA2Reader(bytes.NewReader(packed), tc.dictProp, 0)
+			if err != nil {
+				t.Fatal(err)
+			}
 			refR.init()
 			refR.dec.noAsm = true
 			ref, err := io.ReadAll(refR)
@@ -47,7 +50,10 @@ func TestLZMA2_7zStreams_AsmBug(t *testing.T) {
 			}
 
 			// asm decode, must byte-for-byte match the pure-Go reference.
-			r := NewLZMA2Reader(bytes.NewReader(packed), tc.dictProp)
+			r, err := NewLZMA2Reader(bytes.NewReader(packed), tc.dictProp, 0)
+			if err != nil {
+				t.Fatal(err)
+			}
 			r.init()
 			r.dec.noAsm = false
 

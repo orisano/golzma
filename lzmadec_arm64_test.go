@@ -24,7 +24,7 @@ func TestTryDecodeAsmShort(t *testing.T) {
 	original := []byte("Hello, World!")
 	compressed := compressWithLzma(t, original)
 
-	r, err := NewReader(bytes.NewReader(compressed))
+	r, err := NewReader(bytes.NewReader(compressed), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func TestTryDecodeAsmRepetitive(t *testing.T) {
 	original := buf.Bytes()
 	compressed := compressWithLzma(t, original)
 
-	r, err := NewReader(bytes.NewReader(compressed))
+	r, err := NewReader(bytes.NewReader(compressed), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -70,7 +70,7 @@ func TestTryDecodeAsmLargeData(t *testing.T) {
 	}
 	compressed := compressWithLzma(t, original)
 
-	r, err := NewReader(bytes.NewReader(compressed))
+	r, err := NewReader(bytes.NewReader(compressed), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +107,7 @@ func TestTryDecodeAsmMixed(t *testing.T) {
 	original := buf.Bytes()
 	compressed := compressWithLzma(t, original)
 
-	r, err := NewReader(bytes.NewReader(compressed))
+	r, err := NewReader(bytes.NewReader(compressed), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -124,7 +124,7 @@ func TestTryDecodeAsmSingleByte(t *testing.T) {
 	original := []byte{0x42}
 	compressed := compressWithLzma(t, original)
 
-	r, err := NewReader(bytes.NewReader(compressed))
+	r, err := NewReader(bytes.NewReader(compressed), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,7 +141,7 @@ func TestTryDecodeAsmAllZeros(t *testing.T) {
 	original := make([]byte, 4096)
 	compressed := compressWithLzma(t, original)
 
-	r, err := NewReader(bytes.NewReader(compressed))
+	r, err := NewReader(bytes.NewReader(compressed), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -162,7 +162,7 @@ func TestTryDecodeAsmAllValues(t *testing.T) {
 	}
 	compressed := compressWithLzma(t, original)
 
-	r, err := NewReader(bytes.NewReader(compressed))
+	r, err := NewReader(bytes.NewReader(compressed), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,7 +185,7 @@ func TestTryDecodeAsmSmallReads(t *testing.T) {
 	original := buf.Bytes()
 	compressed := compressWithLzma(t, original)
 
-	r, err := NewReader(bytes.NewReader(compressed))
+	r, err := NewReader(bytes.NewReader(compressed), 0)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -219,7 +219,7 @@ func TestTryDecodeAsmVariousSizes(t *testing.T) {
 			}
 			compressed := compressWithLzma(t, original)
 
-			r, err := NewReader(bytes.NewReader(compressed))
+			r, err := NewReader(bytes.NewReader(compressed), 0)
 			if err != nil {
 				t.Fatal(err)
 			}

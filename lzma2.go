@@ -34,12 +34,18 @@ type LZMA2Reader struct {
 }
 
 // NewLZMA2Reader creates a new LZMA2 decompressing reader.
-// dictProp is the LZMA2 dictionary size property byte.
-func NewLZMA2Reader(r io.Reader, dictProp byte) *LZMA2Reader {
+// dictProp is the LZMA2 dictionary size property byte. maxDictSize bounds
+// the dictionary size in bytes; streams exceeding it are rejected with
+// ErrDictSizeTooLarge. 0 disables the check.
+func NewLZMA2Reader(r io.Reader, dictProp byte, maxDictSize uint32) (*LZMA2Reader, error) {
+	dicSize := DictSizeFromLZMA2Prop(dictProp)
+	if maxDictSize != 0 && dicSize > maxDictSize {
+		return nil, ErrDictSizeTooLarge
+	}
 	return &LZMA2Reader{
 		r:       r,
-		dicSize: DictSizeFromLZMA2Prop(dictProp),
-	}
+		dicSize: dicSize,
+	}, nil
 }
 
 func (lr *LZMA2Reader) init() {

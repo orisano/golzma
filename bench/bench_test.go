@@ -76,7 +76,7 @@ func BenchmarkGo(b *testing.B) {
 			b.SetBytes(int64(len(original)))
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				r, err := golzma.NewReaderWithDecoder(bytes.NewReader(compressed), &dec)
+				r, err := golzma.NewReaderWithDecoder(bytes.NewReader(compressed), 0, &dec)
 				if err != nil {
 					b.Fatal(err)
 				}
@@ -98,7 +98,7 @@ func BenchmarkGoMixed(b *testing.B) {
 	b.SetBytes(int64(len(original)))
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		r, err := golzma.NewReaderWithDecoder(bytes.NewReader(compressed), &dec)
+		r, err := golzma.NewReaderWithDecoder(bytes.NewReader(compressed), 0, &dec)
 		if err != nil {
 			b.Fatal(err)
 		}

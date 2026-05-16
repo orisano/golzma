@@ -6,8 +6,9 @@ import (
 )
 
 var (
-	ErrData        = errors.New("lzma: data error")
-	ErrUnsupported = errors.New("lzma: unsupported properties")
+	ErrData             = errors.New("lzma: data error")
+	ErrUnsupported      = errors.New("lzma: unsupported properties")
+	ErrDictSizeTooLarge = errors.New("lzma: dictionary size exceeds limit")
 )
 
 const (
@@ -112,11 +113,16 @@ type Decoder = decoder
 // NewRawReader creates an LZMA decompressing reader from a raw LZMA stream
 // (without the 13-byte .lzma header). propData must be exactly 5 bytes
 // (1 byte lc/lp/pb + 4 bytes dictionary size). size is the uncompressed size
-// or -1 if unknown. If dec is non-nil, its internal buffers are reused.
-func NewRawReader(r io.Reader, propData []byte, size int64, dec *Decoder) (*Decoder, error) {
+// or -1 if unknown. maxDictSize bounds the dictionary size in bytes;
+// streams exceeding it are rejected with ErrDictSizeTooLarge. 0 disables
+// the check. If dec is non-nil, its internal buffers are reused.
+func NewRawReader(r io.Reader, propData []byte, size int64, maxDictSize uint32, dec *Decoder) (*Decoder, error) {
 	p, err := decodeProps(propData)
 	if err != nil {
 		return nil, err
+	}
+	if maxDictSize != 0 && p.dicSize > maxDictSize {
+		return nil, ErrDictSizeTooLarge
 	}
 	if dec == nil {
 		dec = new(Decoder)
@@ -127,14 +133,16 @@ func NewRawReader(r io.Reader, propData []byte, size int64, dec *Decoder) (*Deco
 
 // NewReader creates an LZMA decompressing reader from a .lzma format stream.
 // It reads the 13-byte header (5 bytes properties + 8 bytes uncompressed size).
-func NewReader(r io.Reader) (io.Reader, error) {
-	return NewReaderWithDecoder(r, nil)
+// maxDictSize bounds the dictionary size in bytes; streams exceeding it are
+// rejected with ErrDictSizeTooLarge. 0 disables the check.
+func NewReader(r io.Reader, maxDictSize uint32) (io.Reader, error) {
+	return NewReaderWithDecoder(r, maxDictSize, nil)
 }
 
 // NewReaderWithDecoder is like NewReader but reuses the given Decoder's internal
 // buffers. Pass a previously used *Decoder to avoid re-allocating the dictionary.
 // If dec is nil, a new Decoder is allocated.
-func NewReaderWithDecoder(r io.Reader, dec *Decoder) (*Decoder, error) {
+func NewReaderWithDecoder(r io.Reader, maxDictSize uint32, dec *Decoder) (*Decoder, error) {
 	var hdr [headerSize]byte
 	if _, err := io.ReadFull(r, hdr[:]); err != nil {
 		return nil, err
@@ -142,6 +150,9 @@ func NewReaderWithDecoder(r io.Reader, dec *Decoder) (*Decoder, error) {
 	p, err := decodeProps(hdr[:propsSize])
 	if err != nil {
 		return nil, err
+	}
+	if maxDictSize != 0 && p.dicSize > maxDictSize {
+		return nil, ErrDictSizeTooLarge
 	}
 	size := int64(0)
 	for i := 0; i < 8; i++ {

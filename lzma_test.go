@@ -19,7 +19,7 @@ func TestNewReader(t *testing.T) {
 		t.Skipf("lzma command not available: %v", err)
 	}
 
-	r, err := NewReader(bytes.NewReader(compressed))
+	r, err := NewReader(bytes.NewReader(compressed), 0)
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
@@ -49,7 +49,7 @@ func TestNewReaderLarger(t *testing.T) {
 		t.Skipf("lzma command not available: %v", err)
 	}
 
-	r, err := NewReader(bytes.NewReader(compressed))
+	r, err := NewReader(bytes.NewReader(compressed), 0)
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
@@ -74,7 +74,7 @@ func TestNewReaderKnownSize(t *testing.T) {
 		t.Skipf("lzma command not available: %v", err)
 	}
 
-	r, err := NewReader(bytes.NewReader(compressed))
+	r, err := NewReader(bytes.NewReader(compressed), 0)
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
@@ -111,7 +111,7 @@ func BenchmarkDecode(b *testing.B) {
 			b.SetBytes(int64(len(original)))
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				r, err := NewReader(bytes.NewReader(compressed))
+				r, err := NewReader(bytes.NewReader(compressed), 0)
 				if err != nil {
 					b.Fatal(err)
 				}
@@ -150,7 +150,7 @@ func TestNewReaderFile(t *testing.T) {
 	}
 	defer f.Close()
 
-	r, err := NewReader(f)
+	r, err := NewReader(f, 0)
 	if err != nil {
 		t.Fatalf("NewReader: %v", err)
 	}
