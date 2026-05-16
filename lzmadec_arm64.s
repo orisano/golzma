@@ -1443,21 +1443,6 @@ copy_match_0:
 	ORRW	R3<<8, R3, R4
 	AND	$-4, R2, R2
 	ORRW	R4<<16, R4, R4
-	LSL	$32, R4, R8
-	ORR	R8, R4, R4
-
-	CMN	$16, R2
-	BHI	copy_match_0_small
-	AND	$-16, R2, R2
-	ADD	R2, R14, R8
-
-copy_match_0_wide:
-	STP	(R4, R4), (R8)
-	ADD	$16, R8, R8
-	ADDS	$16, R2, R2
-	BEQ	copy_end
-	CMN	$16, R2
-	BLS	copy_match_0_wide
 
 copy_match_0_small:
 	MOVW	R4, (R14)(R2)

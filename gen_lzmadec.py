@@ -599,7 +599,6 @@ def main():
     copy_word_align = Label("copy_word_align")
     copy_word_loop  = Label("copy_word_loop")
     copy_match_0    = Label("copy_match_0")
-    copy_match_0_wide  = Label("copy_match_0_wide")
     copy_match_0_small = Label("copy_match_0_small")
     copy_wide_loop  = Label("copy_wide_loop")
     copy_wide_tail  = Label("copy_wide_tail")
@@ -1119,6 +1118,17 @@ def main():
         blank()
 
         # ==================== COPY MATCH 0 ====================
+        # RLE (rep0=1) match copy. Mirrors the reference SDK
+        # LzmaDecOpt.S `copy_match_0`: 3 single-byte stores followed by a
+        # 4-byte store loop. AND -4 rounds cnt (negative) more negative so
+        # the first 4-byte store can overlap (and rewrite with the same RLE
+        # byte) the trailing 1-3 bytes from the 3 single stores. That keeps
+        # the loop strictly within [dicPos, dicPos+cnt).
+        #
+        # Do NOT add a wider 16-byte STP loop here: 16-byte alignment of cnt
+        # would round it 1-15 bytes more negative than -4 already does, and
+        # those bytes are BEFORE dicPos -- not the RLE byte, so overwriting
+        # corrupts prior dictionary content (e.g. just-decoded literals).
         section("COPY MATCH 0")
         L(copy_match_0)
         for _ in range(3):
@@ -1130,23 +1140,6 @@ def main():
         ORRW(sym.lsl(8), sym, t3)
         AND(-4, cnt, cnt)
         ORRW(t3.lsl(16), t3, t3)
-        LSL(32, t3, t2)
-        ORR(t2, t3, t3)
-        blank()
-
-        CMN(16, cnt)
-        BHI(copy_match_0_small)
-        AND(-16, cnt, cnt)
-        ADD(cnt, dicPos, t2)
-        blank()
-
-        L(copy_match_0_wide)
-        STP(t3, t3, t2 + 0)
-        ADD(16, t2, t2)
-        ADDS(16, cnt, cnt)
-        BEQ(copy_end)
-        CMN(16, cnt)
-        BLS(copy_match_0_wide)
         blank()
 
         L(copy_match_0_small)
